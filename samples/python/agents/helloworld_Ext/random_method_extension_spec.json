@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "http://localhost:8080/extensions/random-greeting-method/v1",
+  "type": "object",
+  "title": "Random Greeting Method Extension Specification",
+  "version": "1.0.0",
+  "description": "A2A method extension that adds a 'message/random' JSON-RPC method for generating random style and language greetings.",
+  "author": {
+    "name": "A2A Samples",
+    "url": "http://localhost:8080"
+  },
+  "extensionType": "method",
+  "capabilities": {
+    "data": false,
+    "profile": false,
+    "methods": true
+  },
+  "methods": [
+    {
+      "name": "message/random",
+      "description": "Generate a random greeting with random style and language combination",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the request"
+          },
+          "excludeStyles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["casual", "formal", "enthusiastic", "multilingual"]
+            },
+            "description": "List of styles to exclude from random selection",
+            "default": []
+          },
+          "excludeLanguages": {
+            "type": "array", 
+            "items": {
+              "type": "string",
+              "enum": ["en", "es", "fr", "de", "ja"]
+            },
+            "description": "List of languages to exclude from random selection",
+            "default": []
+          },
+          "seed": {
+            "type": "integer",
+            "description": "Optional random seed for reproducible results",
+            "minimum": 0
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "message"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Unique identifier for the generated message"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "text"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The randomly generated greeting text"
+                }
+              },
+              "required": ["kind", "text"]
+            }
+          },
+          "role": {
+            "type": "string",
+            "const": "agent"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "randomSelection": {
+                "type": "object",
+                "properties": {
+                  "style": {
+                    "type": "string",
+                    "enum": ["casual", "formal", "enthusiastic", "multilingual"],
+                    "description": "The randomly selected greeting style"
+                  },
+                  "language": {
+                    "type": "string", 
+                    "enum": ["en", "es", "fr", "de", "ja"],
+                    "description": "The randomly selected language"
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "The random seed used (if provided)"
+                  }
+                },
+                "required": ["style", "language"],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "required": ["kind", "messageId", "parts", "role"],
+        "additionalProperties": false
+      },
+      "errors": [
+        {
+          "code": -32001,
+          "message": "No valid style/language combinations available",
+          "description": "All styles or languages have been excluded, leaving no valid combinations"
+        },
+        {
+          "code": -32002,
+          "message": "Random generation failed",
+          "description": "Internal error during random selection process"
+        }
+      ]
+    }
+  ],
+  "activationMethods": {
+    "header": {
+      "name": "X-A2A-Extensions",
+      "value": "http://localhost:8080/extensions/random-greeting-method/v1"
+    }
+  },
+  "examples": [
+    {
+      "description": "Basic random greeting request",
+      "request": {
+        "jsonrpc": "2.0",
+        "id": "random-test-1",
+        "method": "message/random",
+        "params": {
+          "id": "task-random-1"
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "random-test-1",
+        "result": {
+          "kind": "message",
+          "messageId": "msg-random-12345",
+          "parts": [
+            {
+              "kind": "text",
+              "text": "HELLO THERE!!! 🎉✨ A2Aの素晴らしい世界へようこそ！"
+            }
+          ],
+          "role": "agent",
+          "metadata": {
+            "randomSelection": {
+              "style": "enthusiastic",
+              "language": "ja"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Random greeting with exclusions",
+      "request": {
+        "jsonrpc": "2.0",
+        "id": "random-test-2", 
+        "method": "message/random",
+        "params": {
+          "id": "task-random-2",
+          "excludeStyles": ["enthusiastic"],
+          "excludeLanguages": ["ja", "de"]
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "random-test-2",
+        "result": {
+          "kind": "message",
+          "messageId": "msg-random-67890",
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Bonjour. Je suis ravi de faire votre connaissance."
+            }
+          ],
+          "role": "agent",
+          "metadata": {
+            "randomSelection": {
+              "style": "formal",
+              "language": "fr"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Random greeting with seed for reproducibility",
+      "request": {
+        "jsonrpc": "2.0",
+        "id": "random-test-3",
+        "method": "message/random", 
+        "params": {
+          "id": "task-random-3",
+          "seed": 42
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "random-test-3",
+        "result": {
+          "kind": "message",
+          "messageId": "msg-random-42-seed",
+          "parts": [
+            {
+              "kind": "text", 
+              "text": "¡Hola! 👋"
+            }
+          ],
+          "role": "agent",
+          "metadata": {
+            "randomSelection": {
+              "style": "casual",
+              "language": "es",
+              "seed": 42
+            }
+          }
+        }
+      }
+    }
+  ],
+  "compatibility": {
+    "a2aVersion": "0.3.0",
+    "sdkVersions": {
+      "python": ">=0.3.0",
+      "javascript": ">=0.3.0"
+    }
+  },
+  "documentation": "http://localhost:8080/extensions/random-greeting-method/v1/docs",
+  "changelog": "http://localhost:8080/extensions/random-greeting-method/v1/changelog"
+}

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "http://localhost:8080/extensions/greeting-style/v1",
+  "type": "object",
+  "title": "Greeting Style Extension Specification",
+  "version": "1.0.0",
+  "description": "A2A extension for customizing greeting styles and languages in agent responses.",
+  "author": {
+    "name": "A2A Samples",
+    "url": "http://localhost:8080"
+  },
+  "extensionType": "profile",
+  "capabilities": {
+    "data": true,
+    "profile": true,
+    "methods": false
+  },
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "style": {
+        "type": "string",
+        "enum": ["casual", "formal", "enthusiastic", "multilingual"],
+        "default": "casual",
+        "description": "The greeting style to use"
+      },
+      "language": {
+        "type": "string",
+        "enum": ["en", "es", "fr", "de", "ja"],
+        "default": "en",
+        "description": "The language code for the greeting"
+      }
+    },
+    "additionalProperties": false
+  },
+  "supportedStyles": {
+    "casual": {
+      "description": "Friendly, informal greetings",
+      "examples": ["Hey there! 👋", "¡Hola! 👋", "Salut! 👋"]
+    },
+    "formal": {
+      "description": "Professional, courteous greetings",
+      "examples": ["Good day. I am pleased to make your acquaintance.", "Buenos días. Es un placer conocerle."]
+    },
+    "enthusiastic": {
+      "description": "Energetic, exciting greetings with emojis",
+      "examples": ["HELLO THERE!!! 🎉✨ Welcome to the amazing world of A2A!"]
+    },
+    "multilingual": {
+      "description": "Greetings showing multiple languages simultaneously",
+      "examples": ["Hello (English) • Hola (Español) • Bonjour (Français) • Hallo (Deutsch) • こんにちは (日本語)"]
+    }
+  },
+  "supportedLanguages": {
+    "en": "English",
+    "es": "Spanish (Español)", 
+    "fr": "French (Français)",
+    "de": "German (Deutsch)",
+    "ja": "Japanese (日本語)"
+  },
+  "activationMethods": {
+    "header": {
+      "name": "X-A2A-Extensions",
+      "value": "http://localhost:8080/extensions/greeting-style/v1"
+    },
+    "messageMetadata": {
+      "path": "metadata.extensions['http://localhost:8080/extensions/greeting-style/v1']",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "style": {"$ref": "#/parameters/properties/style"},
+          "language": {"$ref": "#/parameters/properties/language"}
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "description": "Request formal greeting in French",
+      "request": {
+        "headers": {
+          "X-A2A-Extensions": "http://localhost:8080/extensions/greeting-style/v1"
+        },
+        "message": {
+          "metadata": {
+            "extensions": {
+              "http://localhost:8080/extensions/greeting-style/v1": {
+                "style": "formal",
+                "language": "fr"
+              }
+            }
+          }
+        }
+      },
+      "response": "Bonjour. Je suis ravi de faire votre connaissance."
+    },
+    {
+      "description": "Request enthusiastic greeting in Japanese",
+      "request": {
+        "headers": {
+          "X-A2A-Extensions": "http://localhost:8080/extensions/greeting-style/v1"
+        },
+        "message": {
+          "metadata": {
+            "extensions": {
+              "http://localhost:8080/extensions/greeting-style/v1": {
+                "style": "enthusiastic", 
+                "language": "ja"
+              }
+            }
+          }
+        }
+      },
+      "response": "こんにちは！！！ 🎉✨ A2Aの素晴らしい世界へようこそ！"
+    }
+  ],
+  "compatibility": {
+    "a2aVersion": "0.3.0",
+    "sdkVersions": {
+      "python": ">=0.3.0",
+      "javascript": ">=0.3.0"
+    }
+  },
+  "documentation": "http://localhost:8080/extensions/greeting-style/v1/docs",
+  "changelog": "http://localhost:8080/extensions/greeting-style/v1/changelog"
+}

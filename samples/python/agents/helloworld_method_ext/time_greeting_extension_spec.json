@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "http://localhost:8080/extensions/time-greeting/v1",
+  "type": "object",
+  "title": "Time-Based Greeting Extension Specification",
+  "version": "1.0.0",
+  "description": "A2A method extension that provides contextually appropriate greetings based on current time of day with timezone and language support.",
+  "author": {
+    "name": "A2A Samples",
+    "url": "http://localhost:8080"
+  },
+  "extensionType": "method",
+  "capabilities": {
+    "data": false,
+    "profile": false,
+    "methods": true
+  },
+  "methods": [
+    {
+      "name": "greeting/time-based",
+      "description": "Generate contextually appropriate greeting based on current time of day",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the request"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Target timezone (e.g., 'UTC', 'America/New_York', 'Asia/Tokyo')",
+            "default": "local",
+            "examples": ["UTC", "America/New_York", "Europe/London", "Asia/Tokyo"]
+          },
+          "format": {
+            "type": "string",
+            "enum": ["12h", "24h"],
+            "default": "12h",
+            "description": "Time format preference"
+          },
+          "includeTime": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include current time in the response"
+          },
+          "style": {
+            "type": "string",
+            "enum": ["casual", "formal", "brief"],
+            "default": "casual",
+            "description": "Greeting style preference"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "es", "fr", "de", "ja"],
+            "default": "en",
+            "description": "Language for the greeting"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "message"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Unique identifier for the generated message"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "text"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The time-based greeting text"
+                }
+              },
+              "required": ["kind", "text"]
+            }
+          },
+          "role": {
+            "type": "string",
+            "const": "agent"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "timeContext": {
+                "type": "object",
+                "properties": {
+                  "currentTime": {
+                    "type": "string",
+                    "description": "Current time in requested format"
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "description": "Timezone used for greeting"
+                  },
+                  "timePeriod": {
+                    "type": "string",
+                    "enum": ["dawn", "morning", "noon", "afternoon", "evening", "night", "late_night"],
+                    "description": "Time period category"
+                  },
+                  "hour": {
+                    "type": "integer",
+                    "description": "Current hour (0-23)"
+                  },
+                  "style": {
+                    "type": "string",
+                    "description": "Greeting style used"
+                  },
+                  "language": {
+                    "type": "string",
+                    "description": "Language used for greeting"
+                  }
+                },
+                "required": ["currentTime", "timezone", "timePeriod", "hour"],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "required": ["kind", "messageId", "parts", "role"],
+        "additionalProperties": false
+      },
+      "errors": [
+        {
+          "code": -32001,
+          "message": "Invalid timezone",
+          "description": "The specified timezone is not recognized"
+        },
+        {
+          "code": -32002,
+          "message": "Time calculation failed",
+          "description": "Internal error during time calculation process"
+        },
+        {
+          "code": -32003,
+          "message": "Unsupported language",
+          "description": "The requested language is not supported"
+        }
+      ]
+    }
+  ],
+  "timePeriods": {
+    "dawn": {
+      "hours": "5:00-6:59",
+      "description": "Early morning as the sun rises"
+    },
+    "morning": {
+      "hours": "7:00-11:59",
+      "description": "Standard morning hours"
+    },
+    "noon": {
+      "hours": "12:00-12:59",
+      "description": "Midday hour"
+    },
+    "afternoon": {
+      "hours": "13:00-17:59",
+      "description": "Afternoon hours"
+    },
+    "evening": {
+      "hours": "18:00-20:59",
+      "description": "Early evening hours"
+    },
+    "night": {
+      "hours": "21:00-22:59",
+      "description": "Night hours before late night"
+    },
+    "late_night": {
+      "hours": "23:00-4:59",
+      "description": "Late night and very early morning hours"
+    }
+  },
+  "activationMethods": {
+    "header": {
+      "name": "X-A2A-Extensions",
+      "value": "http://localhost:8080/extensions/time-greeting/v1"
+    },
+    "keywords": [
+      "time greeting",
+      "good morning",
+      "good afternoon", 
+      "good evening",
+      "what time is it",
+      "current time greeting",
+      "greet me based on time"
+    ]
+  },
+  "examples": [
+    {
+      "description": "Basic time-based greeting request",
+      "request": {
+        "jsonrpc": "2.0",
+        "id": "greeting-test-1",
+        "method": "message/send",
+        "params": {
+          "message": {
+            "kind": "message",
+            "messageId": "msg-time-001",
+            "parts": [{"kind": "text", "text": "time greeting"}],
+            "role": "user"
+          }
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "greeting-test-1",
+        "result": {
+          "kind": "message",
+          "messageId": "msg-time-response-001",
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Good afternoon! Hope your day is going well! 🌤️ It's currently 2:30 PM."
+            }
+          ],
+          "role": "agent",
+          "metadata": {
+            "timeContext": {
+              "currentTime": "2:30 PM",
+              "timezone": "local",
+              "timePeriod": "afternoon",
+              "hour": 14,
+              "style": "casual",
+              "language": "en"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Time greeting with timezone specification",
+      "request": {
+        "jsonrpc": "2.0",
+        "id": "greeting-test-2",
+        "method": "message/send",
+        "params": {
+          "message": {
+            "kind": "message",
+            "messageId": "msg-time-002",
+            "parts": [{"kind": "text", "text": "time greeting in Tokyo timezone"}],
+            "role": "user",
+            "metadata": {
+              "extensions": {
+                "http://localhost:8080/extensions/time-greeting/v1": {
+                  "timezone": "Asia/Tokyo",
+                  "style": "formal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "greeting-test-2",
+        "result": {
+          "kind": "message",
+          "messageId": "msg-time-response-002",
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Good evening. I trust you are having a pleasant evening. The current time is 7:30 PM in Tokyo."
+            }
+          ],
+          "role": "agent",
+          "metadata": {
+            "timeContext": {
+              "currentTime": "7:30 PM",
+              "timezone": "Asia/Tokyo",
+              "timePeriod": "evening",
+              "hour": 19,
+              "style": "formal",
+              "language": "en"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Multilingual time greeting",
+      "request": {
+        "jsonrpc": "2.0",
+        "id": "greeting-test-3",
+        "method": "message/send",
+        "params": {
+          "message": {
+            "kind": "message",
+            "messageId": "msg-time-003",
+            "parts": [{"kind": "text", "text": "time greeting in Spanish"}],
+            "role": "user"
+          }
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": "greeting-test-3",
+        "result": {
+          "kind": "message",
+          "messageId": "msg-time-response-003",
+          "parts": [
+            {
+              "kind": "text",
+              "text": "¡Buenas tardes! ¡Espero que tengas un buen día! 🌤️ Son las 2:30 PM."
+            }
+          ],
+          "role": "agent",
+          "metadata": {
+            "timeContext": {
+              "currentTime": "2:30 PM",
+              "timezone": "local",
+              "timePeriod": "afternoon",
+              "hour": 14,
+              "style": "casual",
+              "language": "es"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "compatibility": {
+    "a2aVersion": "0.3.0",
+    "sdkVersions": {
+      "python": ">=0.3.0",
+      "javascript": ">=0.3.0"
+    }
+  },
+  "documentation": "http://localhost:8080/extensions/time-greeting/v1/docs",
+  "changelog": "http://localhost:8080/extensions/time-greeting/v1/changelog"
+}
